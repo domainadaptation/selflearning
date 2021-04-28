@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Primary Meta Tags -->
+    <title>Adapting ImageNet-scale models to complex distribution shifts with self-learning</title>
+    <meta name="title" content="Adapting ImageNet-scale models to complex distribution shifts with self-learning">
+    <meta name="description" content="Test-time adaptation with self-learning improves robustness of large-scale computer vision models on ImageNet-C, -R, and -A.">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://metatags.io/">
+    <meta property="og:title" content="Adapting ImageNet-scale models to complex distribution shifts with self-learning">
+    <meta property="og:description" content="Test-time adaptation with self-learning improves robustness of large-scale computer vision models on ImageNet-C, -R, and -A.">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://metatags.io/">
+    <meta property="twitter:title" content="Adapting ImageNet-scale models to complex distribution shifts with self-learning">
+    <meta property="twitter:description" content="Test-time adaptation with self-learning improves robustness of large-scale computer vision models on ImageNet-C, -R, and -A.">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+        integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&display=swap" rel="stylesheet">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+
+    <style>
+        .main {
+            font-family: 'IBM Plex Sans Condensed', sans-serif;
+        }
+
+        .code {
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .row {
+            padding-bottom: 20px;
+        }
+
+        .a {
+            color: gainsboro;
+            font-family: 'IBM Plex Sans Condensed', sans-serif;
+        }
+
+        td {
+            padding: 0 15px;
+        }
+
+        p {
+            text-align: justify;
+
+        }
+    </style>
+</head>
+
+<body>
+    <div style="display: none;">
+        \[
+
+        \renewcommand{\d}{{\bf{d}}}
+        \renewcommand{\b}{{\bf{b}}}
+        \newcommand{\J}{{\bf{J}}}
+        \newcommand{\A}{\bf{A}}
+        \newcommand{\B}{\bf{B}}
+        \newcommand{\RR}{\mathbf{R}}
+        \newcommand{\h}{{\bf{h}}}
+        \newcommand{\x}{{\bf{x}}}
+        \newcommand{\bfa}{{\bf{a}}}
+        \newcommand{\bfb}{{\bf{b}}}
+        \newcommand{\bfc}{{\bf{c}}}
+        \newcommand{\y}{{\bf{y}}}
+        \newcommand{\z}{{\bf{z}}}
+        \newcommand{\w}{{\bf{w}}}
+        \newcommand{\f}{{\bf{f}}}
+        \newcommand{\tf}{{\bf{\tilde f}}}
+        \newcommand{\tx}{{\bf{\tilde x}}}
+        \renewcommand{\d}{{\rm{d}}}
+        \newcommand{\s}{{\bf{s}}}
+        \newcommand{\g}{{\bf{g}}}
+        \newcommand{\W}{{\bf{W}}}
+        \newcommand{\vol}{{\operatorname{vol}}}
+        \newcommand{\zz}{\mathbf{z}}
+        \newcommand{\xx}{\mathbf{x}}
+        \newcommand{\bdelta}{\bm{\delta}}
+        \renewcommand{\H}{\mathbf{H}}
+        \newcommand{\txx}{{\tilde{\mathbf{x}}}}
+        \newcommand{\tzz}{{\tilde{\mathbf{z}}}}
+        \newcommand{\tyy}{{\tilde{\mathbf{y}}}}
+        \newcommand{\invf}{f^{-1}}
+        \newcommand{\Sp}{\mathbb{S}}
+        \]
+    </div>
+
+    <div class="container main">
+        <div class="row">
+            <div class="col-sm-2">
+            </div>
+            <div class="col-sm-8" id="main-content">
+                <div class="row text-center my-5" id="#">
+                    <h1>Adapting ImageNet-scale models to complex distribution shifts with self-learning</h1>
+                </div>
+
+                <!-- Begin author list-->
+                <div class="row text-center mb-4">
+                    <div class="col-sm-4  mb-4">
+                        Evgenia Rusak*
+                        <a href="mailto:evgenia.rusak@bethgelab.org"><i class="far fa-envelope"></i></a></br>
+                        University of Tübingen & <nobr>IMPRS-IS</nobr>
+                    </div>
+                    <div class="col-sm-4 mb-4">
+                        Steffen Schneider*
+                        <a href="mailto:steffen@bethgelab.org"><i class="far fa-envelope"></i></a>
+                        <a href="https://stes.io" target="_blank"><i class="fas fa-link"></i></a></br>
+                        University of Tübingen & <nobr>IMPRS-IS</nobr> & Amazon <small>(internship)</small>
+                    </div>
+                    <div class="col-sm-4 mb-4">
+                        Peter Gehler
+                        <a href="http://gehler.io" target="_blank"><i class="fas fa-link"></i></a></br>
+                        Amazon Tübingen
+                    </div>
+                    <div class="col-sm-4  mb-4">
+                        Oliver Bringmann<br>
+                        University of Tübingen
+                    </div>
+                    <div class="col-sm-4  mb-4">
+                        Wieland Brendel<br>
+                        University of Tübingen
+                    </div>
+                    <div class="col-sm-4  mb-4">
+                        Matthias Bethge
+                        <a href="http://bethgelab.org/people/matthias" target="_blank"><i class="fas fa-link"></i></a><br>
+                        University of Tübingen
+                    </div>
+                </div>
+                <!-- End author list-->
+
+                <div class="row text-center">
+                    <div class="col-sm-4 mb-4">
+                        <h4>
+                            <a href="https://arxiv.org/abs/2104.12928" target="_blank">
+                                <i class="fas fa-file-alt"></i>
+                                Paper
+                            </a>
+                        </h4>
+                    </div>
+                    <div class="col-sm-4 mb-4">
+                        <h4>
+                            <a class="btn-link disabled" href="https://1drv.ms/u/s!ApshaNzdDzMXzId7hco88oEgF3MB7g?e=3puQa7" target="_blank">
+                                <i class="far fa-chart-bar"></i>
+                                Dataset
+                                <small>(soon!)</small>
+                            </a>
+                        </h4>
+                    </div>
+                    <div class="col-sm-4 mb-4">
+                        <h4>
+                            <a class="btn-link disabled" href="https://github.com/brendel-group/cl-ica" target="_blank"> <i
+                                    class="fab fa-github"></i>
+                                Code
+                                <small>(soon!)</small>
+                            </a>
+                        </h4>
+                    </div>
+                </div>
+
+                <div class="row text-center">
+                    <p>
+                        <b>tl;dr:</b>
+                        <span class="text-muted">
+                            Test-time adaptation with self-learning improves robustness of large-scale computer vision models on ImageNet-C, -R, and -A.
+                        </span>
+                    </p>
+                </div>
+
+                <div class="row mt-2">
+                    <h3>News</h3>
+                </div>
+
+                <div class="row">
+                    <table>
+                        <tr>
+                            <td class="mr-10">
+                                <span class="badge badge-pill badge-primary">April '21</span>
+                            </td>
+                            <td>
+                                The pre-print is now available on arXiv: <a
+                                    href="https://arxiv.org/abs/2104.12928" target="_blank">arxiv.org/abs/2104.12928</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="badge badge-pill badge-primary">April '21</span>
+                            </td>
+                            <td>
+                                A preliminary version of the paper was selected for a contributed talk at the ICLR <a href="https://weasul.github.io/accpapers/">Workshop on Weakly Supervised Learning</a>. The talk titled "Better adaptation to distribution shifts with Robust Pseudo-Labeling" along with a Q&A on Zoom is scheduled for May 7, 2021, 12:30 PDT/21:30 CEST. Tune in!
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="row mt-2">
+                    <h3>Abstract</h3>
+                </div>
+                <div class="row">
+                    <p>
+                        While self-learning methods are an important component in many recent domain adaptation techniques, they are not yet comprehensively evaluated on ImageNet-scale datasets common in robustness research. In extensive experiments on ResNet and EfficientNet models, we find that three components are crucial for increasing performance with self-learning: (i) using short update times between the teacher and the student network, (ii) fine-tuning only few affine parameters distributed across the network, and (iii) leveraging methods from robust classification to counteract the effect of label noise. We use these insights to obtain drastically improved state-of-the-art results on ImageNet-C (22.0% mCE), ImageNet-R (17.4% top1 error) and ImageNet-A (14.8% error).
+                        Our techniques yield further improvements in combination with previously proposed robustification methods.
+                        Self-learning is able to reduce the top-1 error to a point where no substantial further progress can be expected.
+                        We therefore re-purpose the dataset from the Visual Domain Adaptation Challenge 2019 and use a subset of it as a new robustness benchmark (ImageNet-D) which proves to be a more challenging dataset for all current state-of-the-art models (58.2% error) to guide future research efforts at the intersection of robustness and domain adaptation on ImageNet scale.
+                    </p>
+                </div>
+
+                <div class="row mt-2">
+                    <div class="col-5">
+                        <img src="img/overview_plot.svg" style="width: 100%;" />
+                        <small class="text-muted">
+                            Robust pseudo labeling (RPL) achieves a new state of the art on ImageNet-C across various model architectures.
+                        </small>
+                    </div>
+                    <div class="col-7">
+                        <img src="img/overview_table.svg" style="width: 100%;" />
+                        <small class="text-muted">
+                            Robust pseudo labeling (RPL) achieves a new state of the art on ImageNet-C, ImageNet-R and ImageNet-A.
+                        </small>
+                    </div>
+                </div>
+
+                <div class="row mt-2">
+                    <h3>Contributions</h3>
+                </div>
+                <ol>
+                    <li>
+                        We obtain state-of-the-art adaptation performance on all common robustness datasets (IN-C: 22.0% mCE, IN-A: 14.8% top-1 error, IN-R: 17.4% top-1 error) and improve upon existing strategies for increasing model robustness for all tested model types.
+                    </li>
+                    <li>
+                        We find that self-learning with short update intervals and a limited number of both adaptable and distributed parameters is crucial for success. We leverage label noise robustness methods to enable adaptation with hard labels and a limited number of images, a problem not typically present in smaller scale domain adaptation.
+                    </li>
+                    <li>
+                        Given the huge performance boost on all robustness datasets, we re-purpose the closest candidate to an ImageNet-scale domain adaptation dataset---the dataset used in the Visual Domain Adaptation Challenge 2019---and propose a subset of it as an additional robustness benchmark for the robustness community. We refer to it as ImageNet-D.
+                    </li>
+                </ol>
+
+
+                <div class="row mt-2">
+                    <h3>Key Experiments</h3>
+                </div>
+
+                <div class="row mt-2">
+                    <div class="col-12">
+
+                        We build on the paradigm for robustness evaluation considered <a href="https://domainadaptation.org/batchnorm">in our previous work</a>:
+                        Assuming access to unlabeled test samples for adapting ImageNet-trained computer vision models.
+
+                        In this work, we use various forms of self-learning for adapting the models. We test pseudo labeling approaches with "hard" and "soft" labels, along with entropy minimization and a variant of hard-pseudolabling which uses the <a href="https://arxiv.org/abs/1805.07836">generalized cross entropy loss</a>.
+
+                        Model selection is entirely done on the development (or holdout) corruptions in ImageNet-C:
+                    </div>
+
+                    <div class="col-10 offset-lg-1 my-5">
+                        <img src="img/model_selection.svg" style="width: 100%;" />
+                        <small class="text-muted">
+                            Model selection is done on the four dev corruptions in ImageNet-C (left). We use the resulting hyperparameters to evaluate models on the ImageNet-C test set, ImageNet-A and ImageNet-R.
+                        </small>
+                    </div>
+
+                    <div class="col-12">
+                        Self-learning enables further improvements across various model architectures.
+                        Notably, in contrast to test-time adaptation of batch norm parameters, the technique works for 
+                        large scale models pre-trained on datasets like IG-3.5 and JFT300M.
+                    </div>
+
+                    <div class="col-12 my-5">
+                        <img src="img/full_results.svg" style="width: 100%;" />
+                        <small class="text-muted">
+                            mCE (lower is better) ImageNet-C in %.
+                            Entropy minimization (ENT) and pseudo-labeling paired with a robust loss function (RPL) reduce the mean Corruption Error (mCE) on IN-C for different models. We report the dev score on the holdout corruptions that were used for hyper-parameter tuning and the "test" score on the 15 test corruptions, evaluated with the best hyper-parameters found on the dev set. We compare vanilla trained (Baseline) and the best known robust variants of different architectures.
+                            *) For the EfficientNet-L2 model, we evaluate the mCE on dev on the severities [1,3,5] to save computational resources. For the ResNet50 model, we show results averaged over three seeds as "mean (unbiased std)".
+                        </small>
+                    </div>
+
+                    Refer to the table in the intro as well as the full papers for results on ImageNet-A and ImageNet-R.
+
+
+                </div>
+
+                <div class="row">
+                    <h3>BibTeX</h3>
+                </div>
+                <div class="row">
+                    <p>If you find our analysis helpful, please cite our pre-print:</p>
+                </div>
+                <div class="row justify-content-md-center">
+                    <div class="col-sm-8 rounded p-3 m-2" style="background-color:lightgray;">
+                        <small class="code">
+                            @article{rusak2021selflearning,<br>
+                            &nbsp;&nbsp;author = { <br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;Rusak, Evgenia. and<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;Schneider, Steffen and<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;Gehler, Peter and<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;Bringmann, Oliver and<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;Brendel, Wieland and<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;Bethge, Matthias<br>
+                            &nbsp;&nbsp;},<br>
+                            &nbsp;&nbsp;title = {<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;Adapting ImageNet-scale models<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;to complex distribution shifts<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;with self-learning<br>
+                            &nbsp;&nbsp;},<br>
+                            &nbsp;&nbsp;journal = {CoRR},<br>
+                            &nbsp;&nbsp;volume = {abs/2104.12928},<br>
+                            &nbsp;&nbsp;year = {2021},<br>
+                            }
+                        </small>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <small class="text-muted">Webpage designed using Bootstrap 4.5.</small>
+                    <a href="#" class="ml-auto"><i class="fas fa-sort-up"></i></a>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+        crossorigin="anonymous"></script>
+
+</body>
+
+</html>
