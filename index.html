@@ -192,6 +192,14 @@
                     <table>
                         <tr>
                             <td class="mr-10">
+                                <span class="badge badge-pill badge-primary">May '21</span>
+                            </td>
+                            <td>
+                                We released <a href="#implementation">a first reference implementation</a> of robust pseudo-labeling. Stay tuned for the full code release.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="mr-10">
                                 <span class="badge badge-pill badge-primary">April '21</span>
                             </td>
                             <td>
@@ -223,18 +231,10 @@
                 </div>
 
                 <div class="row mt-2">
-                    <div class="col-5">
-                        <img src="img/overview_plot.svg" style="width: 100%;" />
-                        <small class="text-muted">
-                            Robust pseudo labeling (RPL) achieves a new state of the art on ImageNet-C across various model architectures.
-                        </small>
-                    </div>
-                    <div class="col-7">
-                        <img src="img/overview_table.svg" style="width: 100%;" />
-                        <small class="text-muted">
-                            Robust pseudo labeling (RPL) achieves a new state of the art on ImageNet-C, ImageNet-R and ImageNet-A.
-                        </small>
-                    </div>
+                    <img src="img/overview.svg" style="width: 100%;" />
+                    <small class="text-muted">
+                        Robust pseudo labeling (RPL) achieves a new state of the art on ImageNet-C, ImageNet-A and ImageNet-P across various model architectures.
+                    </small>
                 </div>
 
                 <div class="row mt-2">
@@ -292,8 +292,46 @@
 
                     Refer to the table in the intro as well as the full papers for results on ImageNet-A and ImageNet-R.
 
+                </div>
+
+                <div class="row mt-2">
+                    <h3>ImageNet-D: A new challenging robustness benchmark</h3>
+                </div>
+                <div class="row mt-2">
+                    <p>
+                        We propose a subset of the dataset from the <a href="https://ai.bu.edu/visda-2019/" target="blank_">Visual Domain Adaptation Challenge 2019</a> as an additional robustness benchmark.
+                        We only consider the subset of the original dataset whose classes can be mapped to ImageNet classes to enable an off-the-shelf evaluation of ImageNet trained models. 
+                    </p>
+                </div>
+                <div class="col-10 offset-lg-1 my-5">
+                    <img class="w-100" src="img/imagenet-d.png"/>
+                    <small class="text-muted">
+                        Overview of six domains in ImageNet-D. The dataset is a filtered version of the VisDa dataset common in domain adaptation research.
+                        To make the dataset easy to use in a context similar to other robustness datasets, we filtered and remapped the original VisDa dataset onto ImageNet labels.
+                    </small>
+                </div>
+                <div class="row mt-2">
+                    <p>
+                        Our best model <span>&#8212;</span> the Noisy Student EfficientNet-L2 model <span>&#8212;</span> performs considerably worse on this dataset compared to the other robustness benchmarks, making this dataset an interesting future benchmark for the robustness community!
+                    </p>
+                </div>
+
+                <div class="row mt-2" id="implementation">
+                    <h3>Implementation</h3>
+                </div>
+                <div class="row">
+
+                    <p>
+                        Robust pseudo-labeling is conceptually easy to implement.
+                        Notably, the best performing variant does not require to cache any values and computes the pseudo-labels on the fly.
+                        Have a look at <a href="https://gist.github.com/stes/d623b52a1ed4256c71384a596474fb31" target="blank_">our reference implementation</a>.
+                    </p>
+
+                    <img class="w-100" src="img/gce.gif" style="border-radius: 10px;" />
 
                 </div>
+
+
 
                 <div class="row">
                     <h3>BibTeX</h3>
@@ -324,6 +362,20 @@
                             }
                         </small>
                     </div>
+                </div>
+
+                <div class="row">
+                    <h3>Notes</h3>
+                </div>
+                <div class="row text-muted">
+                    <ul>
+                        <li>
+                            Concurrent to this work, the CLIP model from Radford et al. [<a href="https://arxiv.org/abs/2103.00020">2103.00020</a>] has shown to be effective at various robustness datasets.
+                            In particular, zero shot transfer to ImageNet-R is at 11.1% (vs. 17.4% for our best <i>adapted</i> model). On ImageNet-A, we still slightly outperform CLIP: 22.9% vs.
+                            16.5% for the non-adapted Efficient Net model and 14.8% for an adapted EfficientNet model.
+                            Given the impressive performance on the ImageNet sketch dataset, it is conceivable that CLIP will also get good performance on ImageNet-D.
+                        </li>
+                    </ul>
                 </div>
 
                 <div class="row">
